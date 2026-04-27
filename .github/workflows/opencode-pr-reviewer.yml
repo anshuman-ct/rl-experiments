@@ -28,7 +28,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: azure/gpt-5.4-nano   # must match your Azure deployment name exactly
+          model: gpt-5.4-nano   # must match your Azure deployment name exactly
           use_github_token: true
           prompt: |
             Using the instructions in .opencode/skills/pr-code-review/SKILL.md, 
