@@ -71,7 +71,7 @@
             font-size: 18px;
         }
 
-        .restart-button, #auto-solve-button {
+        .restart-button, #auto-solve-button, #download-dataset {
             background-color: #8f7a66;
             color: white;
             padding: 10px 20px;
@@ -85,7 +85,7 @@
             font-size: inherit;
         }
         
-        #auto-solve-button {
+        #auto-solve-button, #download-dataset {
              margin-top: 10px;
         }
 
@@ -224,6 +224,7 @@
         <div>
             <button class="restart-button">New Game</button>
             <button id="auto-solve-button">Auto-Solve</button>
+            <button id="download-dataset">Download Dataset</button>
         </div>
     </div>
 
@@ -258,7 +259,38 @@ document.addEventListener('DOMContentLoaded', () => {
     bestScoreElement.textContent = bestScore;
     let isMoving = false;
     let isSolving = false;
-    
+    let dataset = [];
+
+    const ACTION_MAP = {
+        'ArrowUp': 0,
+        'ArrowDown': 1,
+        'ArrowLeft': 2,
+        'ArrowRight': 3
+    };
+
+    function extractNumericGrid(currentGrid) {
+        return currentGrid.map(row =>
+            row.map(cell => cell ? cell.value : 0)
+        );
+    }
+
+    function maxTileValue(currentGrid) {
+        return Math.max(...currentGrid.flat().map(c => c ? c.value : 0));
+    }
+
+    function getActionWithNoise(currentGrid) {
+        const validMoves = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']
+            .filter(d => simulateMove(currentGrid, d).moved);
+
+        if (validMoves.length === 0) return null;
+
+        if (Math.random() < 0.1) {
+            return validMoves[Math.floor(Math.random() * validMoves.length)];
+        }
+
+        return findBestMove(currentGrid);
+    }
+
     let touchStartX = 0;
     let touchStartY = 0;
     const swipeThreshold = 30;
@@ -442,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startGame() {
         stopSolver();
+        dataset = [];
         grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
         updateScore(0);
         addRandomTile();
@@ -465,8 +498,17 @@ document.addEventListener('DOMContentLoaded', () => {
             stopSolver();
             return;
         }
-        const bestMove = findBestMove(grid);
+        const numericGrid = extractNumericGrid(grid);
+        const bestMove = getActionWithNoise(grid);
+        
         if (bestMove) {
+            if (maxTileValue(grid) >= 64) {
+                const action = ACTION_MAP[bestMove];
+                dataset.push({
+                    state: numericGrid,
+                    action: action
+                });
+            }
             await move(bestMove);
             setTimeout(thinkAndMove, 50);
         } else {
@@ -671,6 +713,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     restartButtons.forEach(button => button.addEventListener('click', startGame));
     autoSolveButton.addEventListener('click', toggleSolver);
+    document.getElementById('download-dataset').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(dataset)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '2048_dataset.json';
+        a.click();
+    });
 
     startGame();
 });
