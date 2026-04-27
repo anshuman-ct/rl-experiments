@@ -22,11 +22,13 @@ jobs:
       - name: Run OpenCode PR Review
         uses: anomalyco/opencode/github@v1.14.20
         env:
-          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.AZURE_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}   # e.g. https://YOUR-RESOURCE.openai.azure.com
+          AZURE_OPENAI_API_VERSION: "2024-12-01-preview"                # or your target API version
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          model: azure/gpt-5.4-nano
+          model: azure/gpt-5.4-nano   # must match your Azure deployment name exactly
           use_github_token: true
           prompt: |
             Using the instructions in .opencode/skills/pr-code-review/SKILL.md, 
